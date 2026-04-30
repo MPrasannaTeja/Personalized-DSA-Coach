@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
+build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name = "dsa-coach-backend"
@@ -13,9 +13,10 @@ dependencies = [
     "uvicorn[standard]>=0.29.0",
     "python-multipart>=0.0.9",
 
-    # Agent / LLM  (Ollama — no Anthropic key needed)
+    # Agent / LLM  (auto-switches Groq on cloud, Ollama locally)
     "langchain>=0.2.16",
     "langchain-ollama>=0.1.3",
+    "langchain-groq>=0.1.9",
     "langchain-community>=0.2.16",
     "langgraph>=0.1.19",
 

@@ -18,9 +18,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # ── LLM (Ollama — local, no API key needed) ──────────────────────────────
+    # ── LLM (auto-switches: Groq on cloud, Ollama locally) ───────────────────
+    # Cloud (Railway): set GROQ_API_KEY → uses Groq automatically
+    # Local (laptop):  leave GROQ_API_KEY empty → uses Ollama automatically
+    groq_api_key: str = ""
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "llama2"     # override in .env if you have a different model
+    ollama_model: str = "llama2"
 
     # ── Database ─────────────────────────────────────────────────────────────
     database_url: str           # async (asyncpg)
