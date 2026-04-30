@@ -6,7 +6,7 @@ All other modules import `settings` from here — never read os.environ directly
 from functools import lru_cache
 from typing import List
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     # ── ChromaDB ──────────────────────────────────────────────────────────────
     chroma_host: str = "localhost"
-    chroma_port: int = 8001
+    chroma_port: int = Field(default=8001)
     chroma_collection_name: str = "dsa_pattern_notes"
 
     # ── Telegram ──────────────────────────────────────────────────────────────
@@ -51,14 +51,18 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # ── Celery Beat ───────────────────────────────────────────────────────────
-    daily_nudge_hour: int = 18
-    daily_nudge_minute: int = 0
+    daily_nudge_hour: int = Field(default=18)
+    daily_nudge_minute: int = Field(default=0)
     daily_nudge_timezone: str = "Asia/Kolkata"
 
     # ── Derived helpers ───────────────────────────────────────────────────────
-    @property
-    def is_production(self) -> bool:
-        return self.app_env == "production"
+    @field_validator("chroma_port", "daily_nudge_hour", "daily_nudge_minute", mode="before")
+    @classmethod
+    def handle_empty_int_strings(cls, v):
+        """Convert empty strings to None so Pydantic uses defaults."""
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -67,6 +71,10 @@ class Settings(BaseSettings):
             import json
             return json.loads(v)
         return v
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env == "production"
 
 
 @lru_cache(maxsize=1)
