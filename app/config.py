@@ -6,7 +6,7 @@ All other modules import `settings` from here — never read os.environ directly
 from functools import lru_cache
 from typing import List
 
-from pydantic import Field, field_validator
+from pydantic import Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -58,10 +58,17 @@ class Settings(BaseSettings):
     # ── Derived helpers ───────────────────────────────────────────────────────
     @field_validator("chroma_port", "daily_nudge_hour", "daily_nudge_minute", mode="before")
     @classmethod
-    def handle_empty_int_strings(cls, v):
-        """Convert empty strings to None so Pydantic uses defaults."""
+    def handle_empty_int_strings(cls, v, info):
+        """Convert empty strings to their default values."""
         if isinstance(v, str) and v.strip() == "":
-            return None
+            # Return the field's default value
+            field_name = info.field_name
+            defaults = {
+                "chroma_port": 8001,
+                "daily_nudge_hour": 18,
+                "daily_nudge_minute": 0,
+            }
+            return defaults.get(field_name, v)
         return v
 
     @field_validator("cors_origins", mode="before")
