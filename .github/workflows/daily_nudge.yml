@@ -1,0 +1,18 @@
+name: Daily DSA Nudge
+
+on:
+  schedule:
+    - cron: '30 12 * * *'  # 6:00 PM IST = 12:30 UTC every day
+  workflow_dispatch:        # manual trigger from GitHub Actions tab
+
+jobs:
+  send-nudge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger daily nudge for M_P_Teja
+        run: |
+          curl -X POST \
+            "${{ secrets.RAILWAY_API_URL }}/api/v1/nudge/trigger" \
+            -H "Content-Type: application/json" \
+            -d '{"user_id": "${{ secrets.USER_ID }}"}'
+          echo "Nudge triggered at $(date)"
