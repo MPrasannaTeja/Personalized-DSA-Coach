@@ -755,12 +755,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://localhost:8000/api/v1';
+const API = 'https://personalized-dsa-coach-production.up.railway.app/api/v1';
 let USER_ID = '';
 let chatHistory = [];
 let isLoading = false;
 
-// ── Init ─────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 window.onload = () => {
   const saved = localStorage.getItem('dsa_user_id');
   if (saved) {
@@ -768,10 +768,31 @@ window.onload = () => {
     USER_ID = saved;
     loadProgress();
   }
-  document.getElementById('userIdInput').addEventListener('change', e => {
-    USER_ID = e.target.value.trim();
+
+  const inp = document.getElementById('userIdInput');
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      USER_ID = inp.value.trim();
+      localStorage.setItem('dsa_user_id', USER_ID);
+      loadProgress();
+      toast('Loading your progress...');
+    }
+  });
+
+  inp.addEventListener('change', e => {
+    USER_ID = inp.value.trim();
     localStorage.setItem('dsa_user_id', USER_ID);
     loadProgress();
+  });
+
+  inp.addEventListener('paste', e => {
+    setTimeout(() => {
+      USER_ID = inp.value.trim();
+      localStorage.setItem('dsa_user_id', USER_ID);
+      loadProgress();
+      toast('Loading your progress...');
+    }, 150);
   });
 };
 
@@ -804,15 +825,22 @@ function switchView(view) {
 
 // ── Load progress ─────────────────────────────────────────────────────────────
 async function loadProgress() {
-  if (!USER_ID) return;
+  if (!USER_ID) { toast('Paste your User ID first', 'error'); return; }
+  toast('Loading...');
   try {
-    const res = await fetch(`${API}/progress/${USER_ID}`);
+    const res = await fetch(`${API}/progress/${USER_ID}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      mode: 'cors',
+    });
     if (!res.ok) throw new Error('User not found');
     const data = await res.json();
     updateDashboard(data);
     updateProgressView(data);
+    toast('Progress loaded!');
   } catch(e) {
-    toast('Could not load progress. Check your User ID.', 'error');
+    console.error('loadProgress error:', e);
+    toast('Could not load progress: ' + e.message, 'error');
   }
 }
 
