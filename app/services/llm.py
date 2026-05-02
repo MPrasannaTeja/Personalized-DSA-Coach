@@ -17,7 +17,7 @@ def get_llm():
         from langchain_groq import ChatGroq
         from app.config import settings
         return ChatGroq(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             api_key=settings.groq_api_key,
             temperature=0.7,
             max_tokens=1024,
@@ -39,7 +39,7 @@ def get_structured_llm():
         from langchain_groq import ChatGroq
         from app.config import settings
         return ChatGroq(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             api_key=settings.groq_api_key,
             temperature=0.1,
             max_tokens=512,
