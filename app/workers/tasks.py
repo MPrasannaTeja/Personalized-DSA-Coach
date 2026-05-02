@@ -44,6 +44,21 @@ def get_sync_session() -> Session:
     return SessionLocal()
 
 
+def run_celery_async(coro):
+    """Run async code in a fresh event loop for Celery worker reuse."""
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(coro)
+    finally:
+        try:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+        except Exception:
+            pass
+        loop.close()
+        asyncio.set_event_loop(None)
+
+
 # ── Task: send daily nudge to ALL active users ────────────────────────────────
 
 @celery_app.task(
@@ -110,7 +125,7 @@ def send_nudge_to_user(self, user_id: str):
     Runs as a sub-task so failures are isolated per-user.
     """
     try:
-        result = asyncio.run(_async_send_nudge(user_id))
+        result = run_celery_async(_async_send_nudge(user_id))
         logger.info("Nudge sent to user %s: %s", user_id, result)
         return result
     except Exception as exc:
@@ -247,7 +262,7 @@ def sync_notes_to_chroma():
     Run this as a periodic task (e.g. every hour) to catch failures.
     """
     try:
-        result = asyncio.run(_async_sync_notes())
+        result = run_celery_async(_async_sync_notes())
         return result
     except Exception as exc:
         logger.error("sync_notes_to_chroma failed: %s", exc)
