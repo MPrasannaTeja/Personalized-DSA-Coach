@@ -212,11 +212,5 @@ def build_coach_graph() -> StateGraph:
 
     return graph.compile()
 
-
-# ── Compiled singleton ────────────────────────────────────────────────────────
-from functools import lru_cache
-
-
-@lru_cache(maxsize=1)
 def get_coach_graph():
     return build_coach_graph()
