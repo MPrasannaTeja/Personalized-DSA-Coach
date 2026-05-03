@@ -1,11 +1,12 @@
 import logging
-import os
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 def get_llm():
-    groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+    groq_key = settings.groq_api_key.strip()
     logger.info("[LLM] groq_key present: %s, length: %s", bool(groq_key), len(groq_key))
     if groq_key:
         logger.info("[LLM] Using Groq")
@@ -19,7 +20,6 @@ def get_llm():
     else:
         logger.warning("[LLM] No GROQ_API_KEY — using Ollama")
         from langchain_ollama import ChatOllama
-        from app.config import settings
         return ChatOllama(
             model=settings.ollama_model,
             base_url=settings.ollama_base_url,
@@ -29,7 +29,7 @@ def get_llm():
 
 
 def get_structured_llm():
-    groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+    groq_key = settings.groq_api_key.strip()
     if groq_key:
         from langchain_groq import ChatGroq
         return ChatGroq(
@@ -40,7 +40,6 @@ def get_structured_llm():
         )
     else:
         from langchain_ollama import ChatOllama
-        from app.config import settings
         return ChatOllama(
             model=settings.ollama_model,
             base_url=settings.ollama_base_url,
