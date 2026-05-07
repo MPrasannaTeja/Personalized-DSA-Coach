@@ -168,6 +168,12 @@ async def record_problem_solved(
                     topic_id=topic_id,
                     topic_name=topic_name,
                     phase_idx=phase_idx,
+                    total_solved=0,
+                    solved_easy=0,
+                    solved_medium=0,
+                    solved_hard=0,
+                    hint_used_count=0,
+                    clean_solve_count=0,
                 )
                 db.add(tp)
 
