@@ -23,6 +23,7 @@ from typing import Annotated, Any
 
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
+from langchain_core.utils.function_calling import convert_to_openai_tool
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
@@ -32,6 +33,13 @@ from app.agent.prompts.coach_prompts import COACH_SYSTEM, PHASES
 from app.agent.tools.coach_tools import ALL_TOOLS
 from app.services.llm import get_llm
 from app.services.vector_store import query_similar_notes
+
+# Pre-convert all tools to OpenAI-compatible JSON schema format.
+# GROQ's API expects {"type": "function", "function": {"name": ..., "description": ...,
+# "parameters": ...}} — passing pre-formatted dicts to bind_tools() bypasses
+# LangChain's internal schema conversion, which produces a malformed format that
+# GROQ rejects with a 400 tool_use_failed error.
+GROQ_TOOL_SCHEMAS = [convert_to_openai_tool(t) for t in ALL_TOOLS]
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +120,9 @@ async def coach_node(state: CoachState, config: RunnableConfig) -> dict:
       - Returns tool_calls       → graph goes to tools_node
     """
     llm = get_llm()
-    llm_with_tools = llm.bind_tools(ALL_TOOLS)
+    # Bind pre-converted OpenAI-format tool schemas so GROQ receives the correct
+    # {"type": "function", "function": {...}} structure it expects natively.
+    llm_with_tools = llm.bind_tools(GROQ_TOOL_SCHEMAS)
 
     system_message = SystemMessage(
         content=COACH_SYSTEM.format(
